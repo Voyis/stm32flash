@@ -36,9 +36,10 @@
 #define TERMIOS_TIMEOUT_MS 500
 #endif
 
-#define TERMIOS_TIMEOUT ((TERMIOS_TIMEOUT_MS)/100)
+#define TERMIOS_TIMEOUT ((TERMIOS_TIMEOUT_MS) / 100)
 
-struct serial {
+struct serial
+{
 	int fd;
 	struct termios oldtio;
 	struct termios newtio;
@@ -50,12 +51,13 @@ static serial_t *serial_open(const char *device)
 	serial_t *h = calloc(sizeof(serial_t), 1);
 
 	h->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
-	if (h->fd < 0) {
+	if (h->fd < 0)
+	{
 		free(h);
 		return NULL;
 	}
 
-	if(lockf(h->fd,F_TLOCK,0) != 0)
+	if (lockf(h->fd, F_TLOCK, 0) != 0)
 	{
 		fprintf(stderr, "Error: %s is already open\n", device);
 		free(h);
@@ -84,87 +86,142 @@ static void serial_close(serial_t *h)
 }
 
 static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
-			       const serial_bits_t bits,
-			       const serial_parity_t parity,
-			       const serial_stopbit_t stopbit)
+							   const serial_bits_t bits,
+							   const serial_parity_t parity,
+							   const serial_stopbit_t stopbit)
 {
-	speed_t	port_baud;
+	speed_t port_baud;
 	tcflag_t port_bits;
 	tcflag_t port_parity;
 	tcflag_t port_stop;
 	struct termios settings;
 
-	switch (baud) {
-		case SERIAL_BAUD_1200:    port_baud = B1200; break;
-		case SERIAL_BAUD_1800:    port_baud = B1800; break;
-		case SERIAL_BAUD_2400:    port_baud = B2400; break;
-		case SERIAL_BAUD_4800:    port_baud = B4800; break;
-		case SERIAL_BAUD_9600:    port_baud = B9600; break;
-		case SERIAL_BAUD_19200:   port_baud = B19200; break;
-		case SERIAL_BAUD_38400:   port_baud = B38400; break;
-		case SERIAL_BAUD_57600:   port_baud = B57600; break;
-		case SERIAL_BAUD_115200:  port_baud = B115200; break;
-		case SERIAL_BAUD_230400:  port_baud = B230400; break;
+	switch (baud)
+	{
+	case SERIAL_BAUD_1200:
+		port_baud = B1200;
+		break;
+	case SERIAL_BAUD_1800:
+		port_baud = B1800;
+		break;
+	case SERIAL_BAUD_2400:
+		port_baud = B2400;
+		break;
+	case SERIAL_BAUD_4800:
+		port_baud = B4800;
+		break;
+	case SERIAL_BAUD_9600:
+		port_baud = B9600;
+		break;
+	case SERIAL_BAUD_19200:
+		port_baud = B19200;
+		break;
+	case SERIAL_BAUD_38400:
+		port_baud = B38400;
+		break;
+	case SERIAL_BAUD_57600:
+		port_baud = B57600;
+		break;
+	case SERIAL_BAUD_115200:
+		port_baud = B115200;
+		break;
+	case SERIAL_BAUD_230400:
+		port_baud = B230400;
+		break;
 #ifdef B460800
-		case SERIAL_BAUD_460800:  port_baud = B460800; break;
+	case SERIAL_BAUD_460800:
+		port_baud = B460800;
+		break;
 #endif /* B460800 */
 #ifdef B921600
-		case SERIAL_BAUD_921600:  port_baud = B921600; break;
+	case SERIAL_BAUD_921600:
+		port_baud = B921600;
+		break;
 #endif /* B921600 */
 #ifdef B500000
-		case SERIAL_BAUD_500000:  port_baud = B500000; break;
+	case SERIAL_BAUD_500000:
+		port_baud = B500000;
+		break;
 #endif /* B500000 */
 #ifdef B576000
-		case SERIAL_BAUD_576000:  port_baud = B576000; break;
+	case SERIAL_BAUD_576000:
+		port_baud = B576000;
+		break;
 #endif /* B576000 */
 #ifdef B1000000
-		case SERIAL_BAUD_1000000: port_baud = B1000000; break;
+	case SERIAL_BAUD_1000000:
+		port_baud = B1000000;
+		break;
 #endif /* B1000000 */
 #ifdef B1500000
-		case SERIAL_BAUD_1500000: port_baud = B1500000; break;
+	case SERIAL_BAUD_1500000:
+		port_baud = B1500000;
+		break;
 #endif /* B1500000 */
 #ifdef B2000000
-		case SERIAL_BAUD_2000000: port_baud = B2000000; break;
+	case SERIAL_BAUD_2000000:
+		port_baud = B2000000;
+		break;
 #endif /* B2000000 */
 
-		case SERIAL_BAUD_INVALID:
-		default:
-			return PORT_ERR_UNKNOWN;
+	case SERIAL_BAUD_INVALID:
+	default:
+		return PORT_ERR_UNKNOWN;
 	}
 
-	switch (bits) {
-		case SERIAL_BITS_5: port_bits = CS5; break;
-		case SERIAL_BITS_6: port_bits = CS6; break;
-		case SERIAL_BITS_7: port_bits = CS7; break;
-		case SERIAL_BITS_8: port_bits = CS8; break;
+	switch (bits)
+	{
+	case SERIAL_BITS_5:
+		port_bits = CS5;
+		break;
+	case SERIAL_BITS_6:
+		port_bits = CS6;
+		break;
+	case SERIAL_BITS_7:
+		port_bits = CS7;
+		break;
+	case SERIAL_BITS_8:
+		port_bits = CS8;
+		break;
 
-		default:
-			return PORT_ERR_UNKNOWN;
+	default:
+		return PORT_ERR_UNKNOWN;
 	}
 
-	switch (parity) {
-		case SERIAL_PARITY_NONE: port_parity = 0; break;
-		case SERIAL_PARITY_EVEN: port_parity = PARENB; break;
-		case SERIAL_PARITY_ODD:  port_parity = PARENB | PARODD; break;
+	switch (parity)
+	{
+	case SERIAL_PARITY_NONE:
+		port_parity = 0;
+		break;
+	case SERIAL_PARITY_EVEN:
+		port_parity = PARENB;
+		break;
+	case SERIAL_PARITY_ODD:
+		port_parity = PARENB | PARODD;
+		break;
 
-		default:
-			return PORT_ERR_UNKNOWN;
+	default:
+		return PORT_ERR_UNKNOWN;
 	}
 
-	switch (stopbit) {
-		case SERIAL_STOPBIT_1: port_stop = 0;	   break;
-		case SERIAL_STOPBIT_2: port_stop = CSTOPB; break;
+	switch (stopbit)
+	{
+	case SERIAL_STOPBIT_1:
+		port_stop = 0;
+		break;
+	case SERIAL_STOPBIT_2:
+		port_stop = CSTOPB;
+		break;
 
-		default:
-			return PORT_ERR_UNKNOWN;
+	default:
+		return PORT_ERR_UNKNOWN;
 	}
 
 	/* reset the settings */
-#ifndef __sun		/* Used by GNU and BSD. Ignore __SVR4 in test. */
+#ifndef __sun /* Used by GNU and BSD. Ignore __SVR4 in test. */
 	cfmakeraw(&h->newtio);
-#else /* __sun */
-	h->newtio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR
-			       | IGNCR | ICRNL | IXON);
+#else  /* __sun */
+	h->newtio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
 	h->newtio.c_oflag &= ~OPOST;
 	h->newtio.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 	h->newtio.c_cflag &= ~(CSIZE | PARENB);
@@ -184,16 +241,16 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
 	cfsetispeed(&h->newtio, port_baud);
 	cfsetospeed(&h->newtio, port_baud);
 	h->newtio.c_cflag |=
-		port_parity	|
-		port_bits	|
-		port_stop	|
-		CLOCAL		|
+		port_parity |
+		port_bits |
+		port_stop |
+		CLOCAL |
 		CREAD;
-	if ( port_parity != 0 )
+	if (port_parity != 0)
 		h->newtio.c_iflag |= INPCK;
 
 	h->newtio.c_cc[VMIN] = 0;
-	h->newtio.c_cc[VTIME] = TERMIOS_TIMEOUT;	/* in units of 0.1 s */
+	h->newtio.c_cc[VTIME] = TERMIOS_TIMEOUT; /* in units of 0.1 s */
 
 	/* set the settings */
 	serial_flush(h);
@@ -203,21 +260,21 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
 	/* confirm they were set */
 	tcgetattr(h->fd, &settings);
 	if (settings.c_iflag != h->newtio.c_iflag ||
-	    settings.c_oflag != h->newtio.c_oflag ||
-	    settings.c_cflag != h->newtio.c_cflag ||
-	    settings.c_lflag != h->newtio.c_lflag)
+		settings.c_oflag != h->newtio.c_oflag ||
+		settings.c_cflag != h->newtio.c_cflag ||
+		settings.c_lflag != h->newtio.c_lflag)
 		return PORT_ERR_UNKNOWN;
 
 	snprintf(h->setup_str, sizeof(h->setup_str), "%u %d%c%d",
-		 serial_get_baud_int(baud),
-		 serial_get_bits_int(bits),
-		 serial_get_parity_str(parity),
-		 serial_get_stopbit_int(stopbit));
+			 serial_get_baud_int(baud),
+			 serial_get_bits_int(bits),
+			 serial_get_parity_str(parity),
+			 serial_get_stopbit_int(stopbit));
 	return PORT_ERR_OK;
 }
 
 static port_err_t serial_posix_open(struct port_interface *port,
-				    struct port_options *ops)
+									struct port_options *ops)
 {
 	serial_t *h;
 
@@ -242,12 +299,26 @@ static port_err_t serial_posix_open(struct port_interface *port,
 
 	/* 4. set options */
 	if (serial_setup(h, ops->baudRate,
-			 serial_get_bits(ops->serial_mode),
-			 serial_get_parity(ops->serial_mode),
-			 serial_get_stopbit(ops->serial_mode)
-			) != PORT_ERR_OK) {
+					 serial_get_bits(ops->serial_mode),
+					 serial_get_parity(ops->serial_mode),
+					 serial_get_stopbit(ops->serial_mode)) != PORT_ERR_OK)
+	{
 		serial_close(h);
 		return PORT_ERR_UNKNOWN;
+	}
+
+	if (port->rs485switch != NULL)
+	{
+		char command[100];
+		int error = 0;
+
+		sprintf(command, "sh -c 'echo 0 > %s'", port->rs485switch);
+		printf("%s\n", command);
+		error = system(command);
+		if (error != 0)
+		{
+			printf("%d\n", error);
+		}
 	}
 
 	port->private = h;
@@ -268,7 +339,7 @@ static port_err_t serial_posix_close(struct port_interface *port)
 }
 
 static port_err_t serial_posix_read(struct port_interface *port, void *buf,
-				     size_t nbyte)
+									size_t nbyte)
 {
 	serial_t *h;
 	ssize_t r;
@@ -278,7 +349,8 @@ static port_err_t serial_posix_read(struct port_interface *port, void *buf,
 	if (h == NULL)
 		return PORT_ERR_UNKNOWN;
 
-	while (nbyte) {
+	while (nbyte)
+	{
 		r = read(h->fd, pos, nbyte);
 		if (r == 0)
 			return PORT_ERR_TIMEDOUT;
@@ -292,7 +364,7 @@ static port_err_t serial_posix_read(struct port_interface *port, void *buf,
 }
 
 static port_err_t serial_posix_write(struct port_interface *port, void *buf,
-				      size_t nbyte)
+									 size_t nbyte)
 {
 	serial_t *h;
 	ssize_t r;
@@ -302,7 +374,23 @@ static port_err_t serial_posix_write(struct port_interface *port, void *buf,
 	if (h == NULL)
 		return PORT_ERR_UNKNOWN;
 
-	while (nbyte) {
+	if (port->rs485switch != NULL)
+	{
+		char command[100];
+		int error = 0;
+
+		sprintf(command, "echo 1 > %s", port->rs485switch);
+		printf("%s\n", command);
+		error = system(command);
+		if (error != 0)
+		{
+			printf("%d\n", error);
+		}
+	}
+
+	size_t nbyte2 = nbyte;
+	while (nbyte)
+	{
 		r = write(h->fd, pos, nbyte);
 		if (r < 1)
 			return PORT_ERR_UNKNOWN;
@@ -310,11 +398,26 @@ static port_err_t serial_posix_write(struct port_interface *port, void *buf,
 		nbyte -= r;
 		pos += r;
 	}
+
+	if (port->rs485switch != NULL)
+	{
+		sleep(nbyte2 * 10. / 115200.);
+		char command[100];
+		int error = 0;
+
+		sprintf(command, "echo 0 > %s", port->rs485switch);
+		printf("%s\n", command);
+		error = system(command);
+		if (error != 0)
+		{
+			printf("%d\n", error);
+		}
+	}
 	return PORT_ERR_OK;
 }
 
 static port_err_t serial_posix_gpio(struct port_interface *port,
-				    serial_gpio_t n, int level)
+									serial_gpio_t n, int level)
 {
 	serial_t *h;
 	int bit, lines;
@@ -323,7 +426,8 @@ static port_err_t serial_posix_gpio(struct port_interface *port,
 	if (h == NULL)
 		return PORT_ERR_UNKNOWN;
 
-	switch (n) {
+	switch (n)
+	{
 	case GPIO_RTS:
 		bit = TIOCM_RTS;
 		break;
@@ -374,13 +478,14 @@ static port_err_t serial_posix_flush(struct port_interface *port)
 }
 
 struct port_interface port_serial = {
-	.name	= "serial_posix",
-	.flags	= PORT_BYTE | PORT_GVR_ETX | PORT_CMD_INIT | PORT_RETRY,
-	.open	= serial_posix_open,
-	.close	= serial_posix_close,
-	.flush  = serial_posix_flush,
-	.read	= serial_posix_read,
-	.write	= serial_posix_write,
-	.gpio	= serial_posix_gpio,
-	.get_cfg_str	= serial_posix_get_cfg_str,
+	.name = "serial_posix",
+	.flags = PORT_BYTE | PORT_GVR_ETX | PORT_CMD_INIT | PORT_RETRY,
+	.open = serial_posix_open,
+	.close = serial_posix_close,
+	.flush = serial_posix_flush,
+	.read = serial_posix_read,
+	.write = serial_posix_write,
+	.gpio = serial_posix_gpio,
+	.rs485switch = NULL,
+	.get_cfg_str = serial_posix_get_cfg_str,
 };
