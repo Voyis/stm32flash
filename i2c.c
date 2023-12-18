@@ -213,6 +213,7 @@ struct port_interface port_i2c = {
 	.gpio	= i2c_gpio,
 	.cmd_get_reply	= i2c_cmd_get_reply,
 	.get_cfg_str	= i2c_get_cfg_str,
+	.rs485switch = NULL,
 };
 
 #endif

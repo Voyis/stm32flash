@@ -34,11 +34,13 @@ static struct port_interface *ports[] = {
 };
 
 port_err_t port_open(struct port_options *ops,
-                     struct port_interface **outport) {
+                     struct port_interface **outport)
+{
   int ret;
   static struct port_interface **port;
 
-  for (port = ports; *port; port++) {
+  for (port = ports; *port; port++)
+  {
     ret = (*port)->open(*port, ops);
     if (ret == PORT_ERR_NODEV)
       continue;
@@ -46,7 +48,8 @@ port_err_t port_open(struct port_options *ops,
       break;
     fprintf(stderr, "Error probing interface \"%s\"\n", (*port)->name);
   }
-  if (*port == NULL) {
+  if (*port == NULL)
+  {
     fprintf(stderr, "Cannot handle device \"%s\"\n", ops->device);
     return PORT_ERR_UNKNOWN;
   }
@@ -54,6 +57,11 @@ port_err_t port_open(struct port_options *ops,
   *outport = *port;
 
   (*outport)->rs485switch = ops->rs485switch;
+
+  if (ops->rs485switch != NULL)
+  {
+    (*outport)->initialize(*outport);
+  }
 
   return PORT_ERR_OK;
 }

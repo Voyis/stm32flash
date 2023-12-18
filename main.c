@@ -526,7 +526,7 @@ int main(int argc, char *argv[]) {
     // if ((start % stm->dev->fl_ps[i]) != 0 || (end % stm->dev->fl_ps[i]) != 0)
     // {
     //	fprintf(stderr, "Specified start & length are invalid (must be page
-    //aligned)\n"); 	goto close;
+    // aligned)\n"); 	goto close;
     // }
 
     // TODO: If writes are not page aligned, we should probably read out
