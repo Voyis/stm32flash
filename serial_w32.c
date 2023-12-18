@@ -32,16 +32,14 @@
 #include "port.h"
 #include "serial.h"
 
-struct serial
-{
+struct serial {
   HANDLE fd;
   DCB oldtio;
   DCB newtio;
   char setup_str[11];
 };
 
-static serial_t *serial_open(const char *device)
-{
+static serial_t *serial_open(const char *device) {
   serial_t *h = calloc(sizeof(serial_t), 1);
   char *devName;
 
@@ -49,13 +47,10 @@ static serial_t *serial_open(const char *device)
   COMMTIMEOUTS timeouts = {MAXDWORD, MAXDWORD, 500, 0, 0};
 
   /* Fix the device name if required */
-  if (strlen(device) > 4 && device[0] != '\\')
-  {
+  if (strlen(device) > 4 && device[0] != '\\') {
     devName = calloc(1, strlen(device) + 5);
     sprintf(devName, "\\\\.\\%s", device);
-  }
-  else
-  {
+  } else {
     devName = (char *)device;
   }
 
@@ -69,8 +64,7 @@ static serial_t *serial_open(const char *device)
   if (devName != device)
     free(devName);
 
-  if (h->fd == INVALID_HANDLE_VALUE)
-  {
+  if (h->fd == INVALID_HANDLE_VALUE) {
     if (GetLastError() == ERROR_FILE_NOT_FOUND)
       fprintf(stderr, "File not found: %s\n", device);
     free(h);
@@ -95,14 +89,12 @@ static serial_t *serial_open(const char *device)
   return h;
 }
 
-static void serial_flush(const serial_t __unused *h)
-{
+static void serial_flush(const serial_t __unused *h) {
   /* We shouldn't need to flush in non-overlapping (blocking) mode */
   /* tcflush(h->fd, TCIFLUSH); */
 }
 
-static void serial_close(serial_t *h)
-{
+static void serial_close(serial_t *h) {
   serial_flush(h);
   SetCommState(h->fd, &h->oldtio);
   CloseHandle(h->fd);
@@ -112,10 +104,8 @@ static void serial_close(serial_t *h)
 static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
                                const serial_bits_t bits,
                                const serial_parity_t parity,
-                               const serial_stopbit_t stopbit)
-{
-  switch (baud)
-  {
+                               const serial_stopbit_t stopbit) {
+  switch (baud) {
   case SERIAL_BAUD_1200:
     h->newtio.BaudRate = CBR_1200;
     break;
@@ -178,8 +168,7 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
     return PORT_ERR_UNKNOWN;
   }
 
-  switch (bits)
-  {
+  switch (bits) {
   case SERIAL_BITS_5:
     h->newtio.ByteSize = 5;
     break;
@@ -197,8 +186,7 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
     return PORT_ERR_UNKNOWN;
   }
 
-  switch (parity)
-  {
+  switch (parity) {
   case SERIAL_PARITY_NONE:
     h->newtio.Parity = NOPARITY;
     break;
@@ -213,8 +201,7 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
     return PORT_ERR_UNKNOWN;
   }
 
-  switch (stopbit)
-  {
+  switch (stopbit) {
   case SERIAL_STOPBIT_1:
     h->newtio.StopBits = ONESTOPBIT;
     break;
@@ -250,14 +237,12 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
   return PORT_ERR_OK;
 }
 
-static port_err_t serial_w32_initialize(struct port_interface *port)
-{
+static port_err_t serial_w32_initialize(struct port_interface *port) {
   return PORT_ERR_OK;
 }
 
 static port_err_t serial_w32_open(struct port_interface *port,
-                                  struct port_options *ops)
-{
+                                  struct port_options *ops) {
   serial_t *h;
 
   /* 1. check device name match */
@@ -284,8 +269,7 @@ static port_err_t serial_w32_open(struct port_interface *port,
   /* 4. set options */
   if (serial_setup(h, ops->baudRate, serial_get_bits(ops->serial_mode),
                    serial_get_parity(ops->serial_mode),
-                   serial_get_stopbit(ops->serial_mode)) != PORT_ERR_OK)
-  {
+                   serial_get_stopbit(ops->serial_mode)) != PORT_ERR_OK) {
     serial_close(h);
     return PORT_ERR_UNKNOWN;
   }
@@ -294,8 +278,7 @@ static port_err_t serial_w32_open(struct port_interface *port,
   return PORT_ERR_OK;
 }
 
-static port_err_t serial_w32_close(struct port_interface *port)
-{
+static port_err_t serial_w32_close(struct port_interface *port) {
   serial_t *h;
 
   h = (serial_t *)port->private;
@@ -308,8 +291,7 @@ static port_err_t serial_w32_close(struct port_interface *port)
 }
 
 static port_err_t serial_w32_read(struct port_interface *port, void *buf,
-                                  size_t nbyte)
-{
+                                  size_t nbyte) {
   serial_t *h;
   DWORD r;
   uint8_t *pos = (uint8_t *)buf;
@@ -318,8 +300,7 @@ static port_err_t serial_w32_read(struct port_interface *port, void *buf,
   if (h == NULL)
     return PORT_ERR_UNKNOWN;
 
-  while (nbyte)
-  {
+  while (nbyte) {
     ReadFile(h->fd, pos, nbyte, &r, NULL);
     if (r == 0)
       return PORT_ERR_TIMEDOUT;
@@ -331,8 +312,7 @@ static port_err_t serial_w32_read(struct port_interface *port, void *buf,
 }
 
 static port_err_t serial_w32_write(struct port_interface *port, void *buf,
-                                   size_t nbyte)
-{
+                                   size_t nbyte) {
   serial_t *h;
   DWORD r;
   uint8_t *pos = (uint8_t *)buf;
@@ -341,8 +321,7 @@ static port_err_t serial_w32_write(struct port_interface *port, void *buf,
   if (h == NULL)
     return PORT_ERR_UNKNOWN;
 
-  while (nbyte)
-  {
+  while (nbyte) {
     if (!WriteFile(h->fd, pos, nbyte, &r, NULL))
       return PORT_ERR_UNKNOWN;
     if (r < 1)
@@ -355,8 +334,7 @@ static port_err_t serial_w32_write(struct port_interface *port, void *buf,
 }
 
 static port_err_t serial_w32_gpio(struct port_interface *port, serial_gpio_t n,
-                                  int level)
-{
+                                  int level) {
   serial_t *h;
   int bit;
 
@@ -364,8 +342,7 @@ static port_err_t serial_w32_gpio(struct port_interface *port, serial_gpio_t n,
   if (h == NULL)
     return PORT_ERR_UNKNOWN;
 
-  switch (n)
-  {
+  switch (n) {
   case GPIO_RTS:
     bit = level ? SETRTS : CLRRTS;
     break;
@@ -395,16 +372,14 @@ static port_err_t serial_w32_gpio(struct port_interface *port, serial_gpio_t n,
   return PORT_ERR_OK;
 }
 
-static const char *serial_w32_get_cfg_str(struct port_interface *port)
-{
+static const char *serial_w32_get_cfg_str(struct port_interface *port) {
   serial_t *h;
 
   h = (serial_t *)port->private;
   return h ? h->setup_str : "INVALID";
 }
 
-static port_err_t serial_w32_flush(struct port_interface *port)
-{
+static port_err_t serial_w32_flush(struct port_interface *port) {
   serial_t *h;
   h = (serial_t *)port->private;
   if (h == NULL)

@@ -23,8 +23,7 @@
 
 #include "serial.h"
 
-typedef enum
-{
+typedef enum {
   PORT_ERR_OK = 0,
   PORT_ERR_NODEV,    /* No such device */
   PORT_ERR_TIMEDOUT, /* Operation timed out */
@@ -39,8 +38,7 @@ typedef enum
 #define PORT_STRETCH_W (1 << 4) /* warning for no-stretching commands */
 
 /* all options and flags used to open and configure an interface */
-struct port_options
-{
+struct port_options {
   const char *device;
   serial_baud_t baudRate;
   const char *serial_mode;
@@ -57,14 +55,12 @@ struct port_options
  * On byte-oriented protocols, i.e. UART, this information would be skipped
  * after read the first byte, so not needed.
  */
-struct varlen_cmd
-{
+struct varlen_cmd {
   uint8_t version;
   uint8_t length;
 };
 
-struct port_interface
-{
+struct port_interface {
   const char *name;
   unsigned flags;
   port_err_t (*open)(struct port_interface *port, struct port_options *ops);

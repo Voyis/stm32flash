@@ -41,27 +41,23 @@
 static port_err_t serial_posix_write(struct port_interface *port, void *buf,
                                      size_t nbyte);
 
-struct serial
-{
+struct serial {
   int fd;
   struct termios oldtio;
   struct termios newtio;
   char setup_str[11];
 };
 
-static serial_t *serial_open(const char *device)
-{
+static serial_t *serial_open(const char *device) {
   serial_t *h = calloc(sizeof(serial_t), 1);
 
   h->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
-  if (h->fd < 0)
-  {
+  if (h->fd < 0) {
     free(h);
     return NULL;
   }
 
-  if (lockf(h->fd, F_TLOCK, 0) != 0)
-  {
+  if (lockf(h->fd, F_TLOCK, 0) != 0) {
     fprintf(stderr, "Error: %s is already open\n", device);
     free(h);
     return NULL;
@@ -76,8 +72,7 @@ static serial_t *serial_open(const char *device)
 
 static void serial_flush(const serial_t *h) { tcflush(h->fd, TCIFLUSH); }
 
-static void serial_close(serial_t *h)
-{
+static void serial_close(serial_t *h) {
   serial_flush(h);
   tcsetattr(h->fd, TCSANOW, &h->oldtio);
   lockf(h->fd, F_ULOCK, 0);
@@ -88,16 +83,14 @@ static void serial_close(serial_t *h)
 static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
                                const serial_bits_t bits,
                                const serial_parity_t parity,
-                               const serial_stopbit_t stopbit)
-{
+                               const serial_stopbit_t stopbit) {
   speed_t port_baud;
   tcflag_t port_bits;
   tcflag_t port_parity;
   tcflag_t port_stop;
   struct termios settings;
 
-  switch (baud)
-  {
+  switch (baud) {
   case SERIAL_BAUD_1200:
     port_baud = B1200;
     break;
@@ -169,8 +162,7 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
     return PORT_ERR_UNKNOWN;
   }
 
-  switch (bits)
-  {
+  switch (bits) {
   case SERIAL_BITS_5:
     port_bits = CS5;
     break;
@@ -188,8 +180,7 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
     return PORT_ERR_UNKNOWN;
   }
 
-  switch (parity)
-  {
+  switch (parity) {
   case SERIAL_PARITY_NONE:
     port_parity = 0;
     break;
@@ -204,8 +195,7 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
     return PORT_ERR_UNKNOWN;
   }
 
-  switch (stopbit)
-  {
+  switch (stopbit) {
   case SERIAL_STOPBIT_1:
     port_stop = 0;
     break;
@@ -267,8 +257,7 @@ static port_err_t serial_setup(serial_t *h, const serial_baud_t baud,
   return PORT_ERR_OK;
 }
 
-static port_err_t serial_posix_initialize(struct port_interface *port)
-{
+static port_err_t serial_posix_initialize(struct port_interface *port) {
   // This needs to be handled by a secondary tool that opens the port correctly.
   // This application doesn't open the port correctly.
   // if (port->rs485switch != NULL)
@@ -277,8 +266,9 @@ static port_err_t serial_posix_initialize(struct port_interface *port)
   //   fflush(stdout);
   //   if (port->rs485switch != NULL)
   //   {
-  //     // Send the enable bootloader command if this is an LED programmed through 485
-  //     uint8_t buf[] = {0x32, 0x47, 0x20, 0xc, 0x0, 0x6, 0xdf, 0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0xc, 0x26, 0x44};
+  //     // Send the enable bootloader command if this is an LED programmed
+  //     through 485 uint8_t buf[] = {0x32, 0x47, 0x20, 0xc, 0x0, 0x6, 0xdf,
+  //     0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0xc, 0x26, 0x44};
   //     serial_posix_write(port, buf, 17);
   //   }
   //   sleep(1);
@@ -288,8 +278,7 @@ static port_err_t serial_posix_initialize(struct port_interface *port)
 }
 
 static port_err_t serial_posix_open(struct port_interface *port,
-                                    struct port_options *ops)
-{
+                                    struct port_options *ops) {
   serial_t *h;
 
   /* 1. check options */
@@ -314,8 +303,7 @@ static port_err_t serial_posix_open(struct port_interface *port,
   /* 4. set options */
   if (serial_setup(h, ops->baudRate, serial_get_bits(ops->serial_mode),
                    serial_get_parity(ops->serial_mode),
-                   serial_get_stopbit(ops->serial_mode)) != PORT_ERR_OK)
-  {
+                   serial_get_stopbit(ops->serial_mode)) != PORT_ERR_OK) {
     serial_close(h);
     return PORT_ERR_UNKNOWN;
   }
@@ -324,8 +312,7 @@ static port_err_t serial_posix_open(struct port_interface *port,
   return PORT_ERR_OK;
 }
 
-static port_err_t serial_posix_close(struct port_interface *port)
-{
+static port_err_t serial_posix_close(struct port_interface *port) {
   serial_t *h;
 
   h = (serial_t *)port->private;
@@ -338,8 +325,7 @@ static port_err_t serial_posix_close(struct port_interface *port)
 }
 
 static port_err_t serial_posix_read(struct port_interface *port, void *buf,
-                                    size_t nbyte)
-{
+                                    size_t nbyte) {
   serial_t *h;
   ssize_t r;
   uint8_t *pos = (uint8_t *)buf;
@@ -348,8 +334,7 @@ static port_err_t serial_posix_read(struct port_interface *port, void *buf,
   if (h == NULL)
     return PORT_ERR_UNKNOWN;
 
-  while (nbyte)
-  {
+  while (nbyte) {
     r = read(h->fd, pos, nbyte);
     if (r == 0)
       return PORT_ERR_TIMEDOUT;
@@ -363,8 +348,7 @@ static port_err_t serial_posix_read(struct port_interface *port, void *buf,
 }
 
 static port_err_t serial_posix_write(struct port_interface *port, void *buf,
-                                     size_t nbyte)
-{
+                                     size_t nbyte) {
   serial_t *h;
   ssize_t r;
   const uint8_t *pos = (const uint8_t *)buf;
@@ -374,27 +358,22 @@ static port_err_t serial_posix_write(struct port_interface *port, void *buf,
     return PORT_ERR_UNKNOWN;
 
   FILE *fptr = NULL;
-  if (port->rs485switch != NULL)
-  {
+  if (port->rs485switch != NULL) {
     fptr = fopen(port->rs485switch, "w");
-    if (fptr != NULL)
-    {
+    if (fptr != NULL) {
       fprintf(fptr, "%d", 1);
       fseek(fptr, 0, SEEK_SET);
-      //fclose(fptr);
-    }
-    else
-    {
+      // fclose(fptr);
+    } else {
       printf("Failed to open gpio\n");
       fflush(stdout);
     }
-    
-    //fptr = NULL;
+
+    // fptr = NULL;
   }
 
   size_t nbyte2 = nbyte;
-  while (nbyte)
-  {
+  while (nbyte) {
     r = write(h->fd, pos, nbyte);
     if (r < 1)
       return PORT_ERR_UNKNOWN;
@@ -403,12 +382,10 @@ static port_err_t serial_posix_write(struct port_interface *port, void *buf,
     pos += r;
   }
 
-  if (port->rs485switch != NULL)
-  {
+  if (port->rs485switch != NULL) {
     usleep(10 * nbyte2 * 1000000 / 115200); // wait for data to transfer
-    //fptr = fopen(port->rs485switch, "w");
-    if (fptr != NULL)
-    {
+    // fptr = fopen(port->rs485switch, "w");
+    if (fptr != NULL) {
       fprintf(fptr, "%d", 0);
       fclose(fptr);
     }
@@ -417,8 +394,7 @@ static port_err_t serial_posix_write(struct port_interface *port, void *buf,
 }
 
 static port_err_t serial_posix_gpio(struct port_interface *port,
-                                    serial_gpio_t n, int level)
-{
+                                    serial_gpio_t n, int level) {
   serial_t *h;
   int bit, lines;
 
@@ -426,8 +402,7 @@ static port_err_t serial_posix_gpio(struct port_interface *port,
   if (h == NULL)
     return PORT_ERR_UNKNOWN;
 
-  switch (n)
-  {
+  switch (n) {
   case GPIO_RTS:
     bit = TIOCM_RTS;
     break;
@@ -457,16 +432,14 @@ static port_err_t serial_posix_gpio(struct port_interface *port,
   return PORT_ERR_OK;
 }
 
-static const char *serial_posix_get_cfg_str(struct port_interface *port)
-{
+static const char *serial_posix_get_cfg_str(struct port_interface *port) {
   serial_t *h;
 
   h = (serial_t *)port->private;
   return h ? h->setup_str : "INVALID";
 }
 
-static port_err_t serial_posix_flush(struct port_interface *port)
-{
+static port_err_t serial_posix_flush(struct port_interface *port) {
   serial_t *h;
   h = (serial_t *)port->private;
   if (h == NULL)
